@@ -1,0 +1,638 @@
+apiVersion: v1
+kind: Template
+
+metadata:
+  name: rails-starter
+  annotations:
+    description: RAILS6 starter app
+    iconClass: icon-ruby
+    openshift.io/display-name: RAILS6 starter app
+    openshift.io/provider-display-name: majordomus.io
+    openshift.io/documentation-url: 'https://github.com/majordomusio/rails-starter'
+    openshift.io/support-url: 'https://github.com/majordomusio/rails-starter/issues'
+    openshift.io/long-description: >-
+      This template defines resources needed to deploy the RAILS application,
+      including a build configuration, application deployment configuration, and
+      database deployment configuration.
+    tags: 'quickstart,ruby,rails'
+    template.openshift.io/bindable: 'false'
+
+labels:
+  app: rails-starter
+  template: rails-starter
+
+message: >-
+  The following service(s) have been created in your project: ${NAME},
+  ${DATABASE_SERVICE_NAME}.
+
+  For more information about using this template, including OpenShift
+  considerations, see https://github.com/majordomusio/rails-starter.
+
+#
+# The definition of all parameters used in the template.
+#
+parameters:
+  - description: The name assigned to all of the frontend objects defined in this template.
+    displayName: Name
+    name: NAME
+    required: true
+    value: rails-starter
+  
+  - description: The application user that is used within the sample application to authorize access on pages.
+    displayName: Application Username
+    name: APPLICATION_USER
+    required: true
+    value: admin
+  
+  - description: The application user that is used within the sample application to authorize access on pages.
+    displayName: Application Username EMail
+    name: APPLICATION_USER_EMAIL
+    required: true
+    value: admin@example.com
+  
+  - description: The application password that is used within the sample application to authorize access on pages.
+    displayName: Application User Password
+    name: APPLICATION_USER_PASSWORD
+    required: true
+    value: changeme
+
+  - description: The exposed hostname that will route to the Rails service, if left blank a value will be defaulted.
+    displayName: Application Hostname
+    name: APPLICATION_HOSTNAME
+  
+  - description: The domain name of the application.
+    displayName: Domain Name
+    name: DOMAIN_NAME
+    value: example.com
+
+  - description: The hostname of the SMTP provider.
+    displayName: SMTP Provider Hostname
+    name: SMTP_PROVIDER_HOST
+
+  - description: The domain name of the SMTP provider.
+    displayName: SMTP Provider Domain Name
+    name: SMTP_PROVIDER_DOMAIN
+
+  - description: The username used to connect to the SMTP gateway.
+    displayName: SMTP Provider Username
+    name: SMTP_PROVIDER_USERNAME
+
+  - description: The password for the SMTP user.
+    displayName: SMTP Provider Password
+    name: SMTP_PROVIDER_PASSWORD
+
+  - description: Used to read encrypted secrets from `config/secrets.yml.enc`
+    displayName: RAILS Master Key
+    name: RAILS_MASTER_KEY
+    value: changeme
+
+  - description: Maximum amount of memory the Rails container can use.
+    displayName: Memory Limit
+    name: MEMORY_LIMIT
+    required: true
+    value: 256Mi
+  
+  - description: Maximum amount of memory the PostgreSQL container can use.
+    displayName: Memory Limit (PostgreSQL)
+    name: MEMORY_POSTGRESQL_LIMIT
+    required: true
+    value: 512Mi
+  
+  - description: 'Volume space available for data, e.g. 512Mi, 2Gi'
+    displayName: Volume Capacity
+    name: VOLUME_CAPACITY
+    required: true
+    value: 1Gi
+  
+  - description: The URL of the repository with your application source code.
+    displayName: Git Repository URL
+    name: SOURCE_REPOSITORY_URL
+    required: true
+    value: 'https://github.com/majordomusio/rails-starter.git'
+
+  - description: Set this to a branch name, tag or other ref of your repository if you are not using the default branch.
+    displayName: Git Reference
+    name: SOURCE_REPOSITORY_REF
+    required: true
+    value: 'master'
+  
+  - description: Set this to the relative path to your project if it is not in the root of your repository.
+    displayName: Context Directory
+    name: CONTEXT_DIR
+  
+  - description: Github trigger secret.  A difficult to guess string encoded as part of the webhook URL.  Not encrypted.
+    displayName: GitHub Webhook Secret
+    from: '[a-zA-Z0-9]{40}'
+    generate: expression
+    name: GITHUB_WEBHOOK_SECRET
+  
+  - description: Your secret key for verifying the integrity of signed cookies.
+    displayName: Secret Key
+    from: '[a-z0-9]{127}'
+    generate: expression
+    name: SECRET_KEY_BASE
+  
+  - description: Environment under which the sample application will run. Could be set to production, development or test.
+    displayName: Rails Environment
+    name: RAILS_ENV
+    required: true
+    value: production
+  
+  - description: Enable serving static files from the `/public` folder by default
+    displayName: Rails serve static files
+    name: RAILS_SERVE_STATIC_FILES
+    value: 'true'
+  
+  - description: Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
+    displayName: Rails enforce SSL
+    name: RAILS_ENFORCE_SSL
+    value: 'false'
+  
+  - displayName: Database Service Name
+    name: DATABASE_SERVICE_NAME
+    required: true
+    value: postgresql
+  
+  - displayName: Database Username
+    from: 'user[A-Z0-9]{3}'
+    generate: expression
+    name: DATABASE_USER
+  
+  - displayName: Database Password
+    from: '[a-zA-Z0-9]{8}'
+    generate: expression
+    name: DATABASE_PASSWORD
+  
+  - displayName: Database Name
+    name: DATABASE_NAME
+    required: true
+    value: root
+  
+  - displayName: Maximum Database Connections
+    name: POSTGRESQL_MAX_CONNECTIONS
+    value: '50'
+  
+  - displayName: Shared Buffer Amount
+    name: POSTGRESQL_SHARED_BUFFERS
+    value: 12MB
+  
+  - description: The custom RubyGems mirror URL
+    displayName: Custom RubyGems Mirror URL
+    name: RUBYGEM_MIRROR
+
+#
+# All objects needed to build and deploy the application.
+#
+
+objects:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: '${NAME}'
+    stringData:
+      application-user: '${APPLICATION_USER}'
+      application-user-email: '${APPLICATION_USER_EMAIL}'
+      application-user-password: '${APPLICATION_USER_PASSWORD}'
+      database-password: '${DATABASE_PASSWORD}'
+      database-user: '${DATABASE_USER}'
+      keybase: '${SECRET_KEY_BASE}'
+      rails-master-key: '${RAILS_MASTER_KEY}'
+      smtp-provider-host: '${SMTP_PROVIDER_HOST}'
+      smtp-provider-domain: '${SMTP_PROVIDER_DOMAIN}'
+      smtp-provider-username: '${SMTP_PROVIDER_USERNAME}'
+      smtp-provider-password: '${SMTP_PROVIDER_PASSWORD}'
+
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      annotations:
+        description: RAILS6 starter app
+      name: '${NAME}'
+  
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        description: Defines how to build the application
+        template.alpha.openshift.io/wait-for-ready: 'true'
+      name: '${NAME}'
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: '${NAME}:latest'
+      postCommit:
+        script: ''
+      source:
+        type: Git
+        git:
+          ref: '${SOURCE_REPOSITORY_REF}'
+          uri: '${SOURCE_REPOSITORY_URL}'
+        contextDir: '${CONTEXT_DIR}'
+      strategy:
+        dockerStrategy:
+          dockerfilePath: Dockerfile
+          # define all parameters that are needed during the build !
+          env:
+            # database configuration
+            - name: DATABASE_SERVICE_NAME
+              value: '${DATABASE_SERVICE_NAME}'
+            
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: '${NAME}'
+            
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: '${NAME}'
+            
+            - name: POSTGRESQL_DATABASE
+              value: '${DATABASE_NAME}'
+            
+            - name: POSTGRESQL_MAX_CONNECTIONS
+              value: '${POSTGRESQL_MAX_CONNECTIONS}'
+            
+            - name: POSTGRESQL_SHARED_BUFFERS
+              value: '${POSTGRESQL_SHARED_BUFFERS}'
+            
+            # admin user
+            - name: APPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  key: application-user
+                  name: '${NAME}'
+            
+            - name: APPLICATION_USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  key: application-user-email
+                  name: '${NAME}'
+            
+            - name: APPLICATION_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: application-user-password
+                  name: '${NAME}'
+            
+            # SMTP
+            - name: SMTP_PROVIDER_HOST
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-provider-host
+                  name: '${NAME}'
+
+            - name: SMTP_PROVIDER_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-provider-domain
+                  name: '${NAME}'
+
+            - name: SMTP_PROVIDER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-provider-username
+                  name: '${NAME}'
+
+            - name: SMTP_PROVIDER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: smtp-provider-password
+                  name: '${NAME}'
+
+            # RAILS app configuration
+            - name: APPLICATION_HOSTNAME
+              value: '${APPLICATION_HOSTNAME}'
+
+            - name: DOMAIN_NAME
+              value: '${DOMAIN_NAME}'
+                  
+            - name: RAILS_ENV
+              value: '${RAILS_ENV}'
+
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  key: keybase
+                  name: '${NAME}'
+
+            - name: RAILS_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: rails-master-key
+                  name: '${NAME}'
+            
+            - name: RAILS_SERVE_STATIC_FILES
+              value: '${RAILS_SERVE_STATIC_FILES}'
+            
+            - name: RAILS_ENFORCE_SSL
+              value: '${RAILS_ENFORCE_SSL}'
+
+            - name: RUBYGEM_MIRROR
+              value: ''
+        
+      triggers:
+        - type: ConfigChange
+        - github:
+            secret: '${GITHUB_WEBHOOK_SECRET}'
+          type: GitHub
+        - type: ImageChange
+          imageChange:
+            from:
+              kind: ImageStreamTag
+              name: 'ubi8-rails:6.0'
+              #namespace: 'base'
+              
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      annotations:
+        description: Defines how to deploy the application server
+        template.alpha.openshift.io/wait-for-ready: 'true'
+      name: '${NAME}'
+    spec:
+      replicas: 1
+      selector:
+        name: '${NAME}'
+      strategy:
+        type: Recreate
+        recreateParams:
+          pre:
+            execNewPod:
+              command:
+                - migrate-database
+              containerName: '${NAME}'
+            failurePolicy: Ignore
+        
+      template:
+        metadata:
+          labels:
+            name: '${NAME}'
+          name: '${NAME}'
+        spec:
+          containers:
+            - env:
+                # Database configuration
+                - name: DATABASE_SERVICE_NAME
+                  value: '${DATABASE_SERVICE_NAME}'
+                
+                - name: POSTGRESQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-user
+                      name: '${NAME}'
+                
+                - name: POSTGRESQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-password
+                      name: '${NAME}'
+                
+                - name: SECRET_KEY_BASE
+                  valueFrom:
+                    secretKeyRef:
+                      key: keybase
+                      name: '${NAME}'
+                
+                - name: POSTGRESQL_DATABASE
+                  value: '${DATABASE_NAME}'
+                
+                - name: POSTGRESQL_MAX_CONNECTIONS
+                  value: '${POSTGRESQL_MAX_CONNECTIONS}'
+                
+                - name: POSTGRESQL_SHARED_BUFFERS
+                  value: '${POSTGRESQL_SHARED_BUFFERS}'
+              
+                # Admin user
+                - name: APPLICATION_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: application-user
+                      name: '${NAME}'
+                
+                - name: APPLICATION_USER_EMAIL
+                  valueFrom:
+                    secretKeyRef:
+                      key: application-user-email
+                      name: '${NAME}'
+                
+                - name: APPLICATION_USER_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: application-user-password
+                      name: '${NAME}'
+
+                # SMTP
+                - name: SMTP_PROVIDER_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      key: smtp-provider-host
+                      name: '${NAME}'
+
+                - name: SMTP_PROVIDER_DOMAIN
+                  valueFrom:
+                    secretKeyRef:
+                      key: smtp-provider-domain
+                      name: '${NAME}'
+
+                - name: SMTP_PROVIDER_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      key: smtp-provider-username
+                      name: '${NAME}'
+
+                - name: SMTP_PROVIDER_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: smtp-provider-password
+                      name: '${NAME}'
+                
+                # RAILS App Configuration
+                - name: APPLICATION_HOSTNAME
+                  value: '${APPLICATION_HOSTNAME}'
+
+                - name: DOMAIN_NAME
+                  value: '${DOMAIN_NAME}'
+
+                - name: RAILS_ENV
+                  value: '${RAILS_ENV}'
+                
+                - name: RAILS_LOG_LEVEL
+                  value: 'warn'
+
+                - name: RAILS_MASTER_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: rails-master-key
+                      name: '${NAME}'
+                
+                - name: RAILS_SERVE_STATIC_FILES
+                  value: '${RAILS_SERVE_STATIC_FILES}'
+                
+                - name: RAILS_ENFORCE_SSL
+                  value: '${RAILS_ENFORCE_SSL}'
+              image: ''
+              #livenessProbe:
+              #  httpGet:
+              #    path: /status/alive
+              #    port: 8080
+              #  initialDelaySeconds: 60
+              #  timeoutSeconds: 3
+              name: '${NAME}'
+              ports:
+                - containerPort: 8080
+              #readinessProbe:
+              #  httpGet:
+              #    path: /status/ready
+              #    port: 8080
+              #  initialDelaySeconds: 30
+              #  timeoutSeconds: 5
+              resources:
+                limits:
+                  memory: '${MEMORY_LIMIT}'
+      triggers:
+        - imageChangeParams:
+            automatic: true
+            containerNames:
+              - '${NAME}'
+            from:
+              kind: ImageStreamTag
+              name: '${NAME}:latest'
+          type: ImageChange
+        - type: ConfigChange
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        description: Exposes and load balances the application pods
+        service.alpha.openshift.io/dependencies: '[{"name": "${DATABASE_SERVICE_NAME}", "kind": "Service"}]'
+      name: '${NAME}'
+    spec:
+      ports:
+        - name: web
+          port: 8080
+          targetPort: 8080
+      selector:
+        name: '${NAME}'
+  
+  - apiVersion: v1
+    kind: Route
+    metadata:
+      name: '${NAME}'
+    spec:
+      host: '${APPLICATION_HOSTNAME}'
+      to:
+        kind: Service
+        name: '${NAME}'
+        
+  #
+  # Deployment configuration for the database
+  #
+
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      annotations:
+        description: Defines how to deploy the database
+        template.alpha.openshift.io/wait-for-ready: 'true'
+      name: '${DATABASE_SERVICE_NAME}'
+    spec:
+      replicas: 1
+      selector:
+        name: '${DATABASE_SERVICE_NAME}'
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            name: '${DATABASE_SERVICE_NAME}'
+          name: '${DATABASE_SERVICE_NAME}'
+        spec:
+          containers:
+            - env:
+                - name: POSTGRESQL_USER
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-user
+                      name: '${NAME}'
+                - name: POSTGRESQL_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: database-password
+                      name: '${NAME}'
+                - name: POSTGRESQL_DATABASE
+                  value: '${DATABASE_NAME}'
+                - name: POSTGRESQL_MAX_CONNECTIONS
+                  value: '${POSTGRESQL_MAX_CONNECTIONS}'
+                - name: POSTGRESQL_SHARED_BUFFERS
+                  value: '${POSTGRESQL_SHARED_BUFFERS}'
+              image: ' '
+              livenessProbe:
+                initialDelaySeconds: 30
+                tcpSocket:
+                  port: 5432
+                timeoutSeconds: 1
+              name: postgresql
+              ports:
+                - containerPort: 5432
+              readinessProbe:
+                exec:
+                  command:
+                    - /bin/sh
+                    - '-i'
+                    - '-c'
+                    - >-
+                      psql -h 127.0.0.1 -U ${POSTGRESQL_USER} -q -d
+                      ${POSTGRESQL_DATABASE} -c 'SELECT 1'
+                initialDelaySeconds: 5
+                timeoutSeconds: 1
+              resources:
+                limits:
+                  memory: '${MEMORY_POSTGRESQL_LIMIT}'
+              volumeMounts:
+                - mountPath: /var/lib/pgsql/data
+                  name: '${DATABASE_SERVICE_NAME}-data'
+          volumes:
+            - name: '${DATABASE_SERVICE_NAME}-data'
+              persistentVolumeClaim:
+                claimName: '${DATABASE_SERVICE_NAME}'
+      triggers:
+        - imageChangeParams:
+            automatic: true
+            containerNames:
+              - postgresql
+            from:
+              kind: ImageStreamTag
+              name: 'postgresql:9.5'
+              namespace: 'openshift'
+          type: ImageChange
+        - type: ConfigChange
+
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: '${DATABASE_SERVICE_NAME}'
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: '${VOLUME_CAPACITY}'
+  
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        description: Exposes the database server
+      name: '${DATABASE_SERVICE_NAME}'
+    spec:
+      ports:
+        - name: '${DATABASE_SERVICE_NAME}'
+          port: 5432
+          targetPort: 5432
+      selector:
+        name: '${DATABASE_SERVICE_NAME}'
