@@ -1,0 +1,21 @@
+
+default: &default
+  adapter: mysql2
+  encoding: utf8
+  pool: <%= ENV["RAILS_MAX_THREADS"] || 5 %>
+  
+development:
+  <<: *default
+  database: saas-dev
+  username: root
+  password: saas
+  host: 127.0.0.1
+  port: 3306
+
+test:
+  <<: *default
+  database: saas-test
+  username: root
+  password: saas
+  host: 127.0.0.1
+  port: 3306
