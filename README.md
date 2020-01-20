@@ -19,6 +19,12 @@ Things you may want to cover:
 
 * Services (job queues, cache servers, search engines, etc.)
 
+## Configuration
+
+```bash
+EDITOR=vi rails credentials:edit
+```
+
 ## Deployment instructions
 
 ### Create a database container
