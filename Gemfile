@@ -28,6 +28,10 @@ gem 'devise', '~> 4.7'
 # Authorization
 gem "pundit"
 
+# styling
+gem 'bootstrap', '~> 4.4.1'
+gem 'jquery-rails', '~> 4.3.5'
+
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
 

@@ -42,3 +42,4 @@ docker create --name rails-starter -e MYSQL_ROOT_PASSWORD=saas -e MYSQL_PASSWORD
 ## References
 
 * https://hibbard.eu/rails-react-crud-app/
+* https://github.com/twbs/bootstrap-rubygem
