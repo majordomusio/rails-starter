@@ -2,7 +2,8 @@
 <% if user_signed_in? %>
   <%= link_to 'Logout', logout_path, { method: 'delete'} %>
   <p>
-  <%= current_user.email %>
+  <%= current_user.display_name %>
+  <%= current_user.role %>
 <% else %>
   <%= link_to 'Register', register_path, data: {turbolinks: false} %>
   <%= link_to 'Login', login_path %>
