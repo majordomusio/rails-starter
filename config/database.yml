@@ -1,38 +1,21 @@
 
-<% user = ENV.key?("POSTGRESQL_ADMIN_USER") ? "root" : ENV["POSTGRESQL_USER"] %>
-<% password = ENV.key?("POSTGRESQL_ADMIN_PASSWORD") ? ENV["POSTGRESQL_ADMIN_PASSWORD"] : ENV["POSTGRESQL_PASSWORD"] %>
-<% db_service = ENV.fetch("DATABASE_SERVICE_NAME","").upcase %>
-
 default: &default
-  adapter: postgresql
-  encoding: unicode
-  database: <%= ENV["POSTGRESQL_DATABASE"] %>
-  username: <%= user %>
-  password: <%= password %>
-  host: <%= ENV["#{db_service}_SERVICE_HOST"] %>
-  port: <%= ENV["#{db_service}_SERVICE_PORT"] %>
-  pool: <%= ENV["POSTGRESQL_MAX_CONNECTIONS"] || 5 %>
-  template: template0
-
-production:
-  <<: *default
-
-development:
-  adapter: postgresql
-  encoding: unicode
-  database: 'saas-dev'
-  username: 'saas'
-  password: 'saas'
-  host: '127.0.0.1'
-  port: 5432
-  pool: 5
+  adapter: mysql2
+  encoding: utf8
+  pool: <%= ENV["RAILS_MAX_THREADS"] || 5 %>
   
+development:
+  <<: *default
+  database: saas-dev
+  username: root
+  password: saas
+  host: 127.0.0.1
+  port: 3306
+
 test:
-  adapter: postgresql
-  encoding: unicode
-  database: 'saas-test'
-  username: 'saas'
-  password: 'saas'
-  host: '127.0.0.1'
-  port: 5432
-  pool: 5
+  <<: *default
+  database: saas-test
+  username: root
+  password: saas
+  host: 127.0.0.1
+  port: 3306

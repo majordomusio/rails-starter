@@ -10,7 +10,7 @@ ENV NAME="RAILS6 starter app" \
     DESCRIPTION="RAILS6 starter app" \
     MAINTAINER="ratchet.cc <hello@ratchet.cc>" \
     VENDOR="ratchet.cc" \
-    TAGS=",RAILS"
+    TAGS="RAILS"
 
 LABEL name="$NAME" \
       maintainer="$MAINTAINER" \
